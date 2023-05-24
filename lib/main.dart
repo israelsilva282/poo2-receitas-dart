@@ -24,7 +24,13 @@ class MyApp extends StatelessWidget {
             Text("No meio..."),
             Text("Terminando...")
           ])),
-          bottomNavigationBar: const Text("Botão 1"),
+          bottomNavigationBar: const Row(
+            children: [
+              Text("Apenas começando..."),
+              Text("No meio..."),
+              Text("Terminando...")
+            ],
+          ),
         ));
   }
 }
