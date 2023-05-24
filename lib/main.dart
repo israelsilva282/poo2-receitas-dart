@@ -14,23 +14,19 @@ class MyApp extends StatelessWidget {
         title: 'Primeiro App',
         theme: ThemeData(primarySwatch: Colors.purple),
         home: Scaffold(
-          appBar: AppBar(title: const Text("Meu app")),
-          body: const Center(
-              child: Column(children: [
-            Text(
-              "Apenas começando...",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text("No meio..."),
-            Text("Terminando...")
-          ])),
-          bottomNavigationBar: const Row(
-            children: [
-              Text("Apenas começando..."),
+            appBar: AppBar(title: const Text("Meu app")),
+            body: const Center(
+                child: Column(children: [
+              Text(
+                "Apenas começando...",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text("No meio..."),
               Text("Terminando...")
-            ],
-          ),
-        ));
+            ])),
+            bottomNavigationBar: ElevatedButton(
+              child: const Text("Clique aqui"),
+              onPressed: () => print("Clicou"),
+            )));
   }
 }
