@@ -1,5 +1,33 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  MyApp app = const MyApp();
+
+  runApp(app);
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        theme: ThemeData(primarySwatch: Colors.deepPurple),
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          appBar: AppBar(
+            title: const Text("Dicas"),
+          ),
+          body: DataBodyWidget(objects: const [
+            "La Fin Du Monde - Bock - 65 ibu",
+            "Sapporo Premiume - Sour Ale - 54 ibu",
+            "Duvel - Pilsner - 82 ibu"
+          ]),
+          bottomNavigationBar: const NewNavBar(),
+        ));
+  }
+}
+
 class NewNavBar extends StatelessWidget {
   const NewNavBar({super.key});
 
@@ -21,37 +49,25 @@ class NewNavBar extends StatelessWidget {
   }
 }
 
-class NewBody extends StatelessWidget {
-  const NewBody({super.key});
+class DataBodyWidget extends StatelessWidget {
+  List<String> objects;
 
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text("Israel"),
+  DataBodyWidget({super.key, this.objects = const []});
+
+  Expanded processarUmElemento(String obj) {
+    return Expanded(
+      child: Center(child: Text(obj)),
     );
   }
-}
-
-class NewAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const NewAppBar({super.key});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(title: const Text("Receita 2"));
+    List<Expanded> allTheLines = objects
+        .map((obj) => Expanded(
+              child: Center(child: Text(obj)),
+            ))
+        .toList();
+
+    return Column(children: allTheLines);
   }
-}
-
-void main() {
-  MaterialApp app = MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-      home: const Scaffold(
-        appBar: NewAppBar(),
-        body: NewBody(),
-        bottomNavigationBar: NewNavBar(),
-      ));
-
-  runApp(app);
 }
