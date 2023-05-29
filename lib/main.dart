@@ -15,9 +15,12 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.deepPurple),
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          appBar: AppBar(
-            title: const Text("Dicas"),
-          ),
+          appBar: MyAppBar(
+              title: const Text('Minha Aplicação'),
+              onColorChanged: (Color color) {
+                // Lógica para atualizar a cor do tema aqui
+                print('Cor selecionada: $color');
+              }),
           body: DataBodyWidget(objects: const [
             "La Fin Du Monde - Bock - 65 ibu",
             "Sapporo Premiume - Sour Ale - 54 ibu",
@@ -72,4 +75,27 @@ class DataBodyWidget extends StatelessWidget {
 
     return Column(children: allTheLines);
   }
+}
+
+class MyAppBar extends AppBar {
+  MyAppBar({Key? key, Widget? title, Function(Color)? onColorChanged})
+      : super(key: key, title: title, actions: [
+          PopupMenuButton<Color>(
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<Color>>[
+              const PopupMenuItem<Color>(
+                value: Colors.red,
+                child: Text('Vermelho'),
+              ),
+              const PopupMenuItem<Color>(
+                value: Colors.blue,
+                child: Text('Azul'),
+              ),
+              const PopupMenuItem<Color>(
+                value: Colors.green,
+                child: Text('Verde'),
+              ),
+            ],
+            onSelected: onColorChanged,
+          ),
+        ]);
 }
