@@ -23,13 +23,20 @@ class MyApp extends StatelessWidget {
             "Sapporo Premiume - Sour Ale - 54 ibu",
             "Duvel - Pilsner - 82 ibu"
           ]),
-          bottomNavigationBar: const NewNavBar(),
+          bottomNavigationBar: NewNavBar(
+            objects: const [
+              Icon(Icons.coffee_outlined),
+              Icon(Icons.coffee_outlined),
+            ],
+          ),
         ));
   }
 }
 
 class NewNavBar extends StatelessWidget {
-  const NewNavBar({super.key});
+  List<Icon> objects;
+
+  NewNavBar({super.key, this.objects = const []});
 
   void botaoFoiTocado(int index) {
     print("Tocaram no botão $index");
@@ -37,15 +44,10 @@ class NewNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(onTap: botaoFoiTocado, items: const [
-      BottomNavigationBarItem(
-        label: "Cafés",
-        icon: Icon(Icons.coffee_outlined),
-      ),
-      BottomNavigationBarItem(
-          label: "Cervejas", icon: Icon(Icons.local_drink_outlined)),
-      BottomNavigationBarItem(label: "Nações", icon: Icon(Icons.flag_outlined))
-    ]);
+    List<BottomNavigationBarItem> bottomItems = objects
+        .map((obj) => BottomNavigationBarItem(label: "", icon: obj))
+        .toList();
+    return BottomNavigationBar(onTap: botaoFoiTocado, items: bottomItems);
   }
 }
 
