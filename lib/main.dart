@@ -3,7 +3,34 @@ import 'package:flutter/material.dart';
 var dataObjects = [
   {"name": "La Fin Du Monde", "style": "Bock", "ibu": "65"},
   {"name": "Sapporo Premiume", "style": "Sour Ale", "ibu": "54"},
-  {"name": "Duvel", "style": "Pilsner", "ibu": "82"}
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"},
 ];
 void main() {
   MyApp app = const MyApp();
@@ -23,7 +50,9 @@ class MyApp extends StatelessWidget {
           appBar: AppBar(
             title: const Text("Dicas"),
           ),
-          body: DataBodyWidget(objects: dataObjects),
+          body: SingleChildScrollView(
+            child: DataBodyWidget(objects: dataObjects),
+          ),
           bottomNavigationBar: const NewNavBar(),
         ));
   }
