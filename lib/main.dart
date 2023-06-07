@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+var dataObjects = [
+  {"name": "La Fin Du Monde", "style": "Bock", "ibu": "65"},
+  {"name": "Sapporo Premiume", "style": "Sour Ale", "ibu": "54"},
+  {"name": "Duvel", "style": "Pilsner", "ibu": "82"}
+];
 void main() {
   MyApp app = const MyApp();
 
@@ -15,31 +20,17 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.deepPurple),
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          appBar: MyAppBar(
-              title: const Text('Minha Aplicação'),
-              onColorChanged: (Color color) {
-                // Lógica para atualizar a cor do tema aqui
-                print('Cor selecionada: $color');
-              }),
-          body: DataBodyWidget(objects: const [
-            "La Fin Du Monde - Bock - 65 ibu",
-            "Sapporo Premiume - Sour Ale - 54 ibu",
-            "Duvel - Pilsner - 82 ibu"
-          ]),
-          bottomNavigationBar: NewNavBar(
-            objects: const [
-              Icon(Icons.coffee_outlined),
-              Icon(Icons.coffee_outlined),
-            ],
+          appBar: AppBar(
+            title: const Text("Dicas"),
           ),
+          body: DataBodyWidget(objects: dataObjects),
+          bottomNavigationBar: const NewNavBar(),
         ));
   }
 }
 
 class NewNavBar extends StatelessWidget {
-  List<Icon> objects;
-
-  NewNavBar({super.key, this.objects = const []});
+  const NewNavBar({super.key});
 
   void botaoFoiTocado(int index) {
     print("Tocaram no botão $index");
@@ -47,55 +38,40 @@ class NewNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<BottomNavigationBarItem> bottomItems = objects
-        .map((obj) => BottomNavigationBarItem(label: "", icon: obj))
-        .toList();
-    return BottomNavigationBar(onTap: botaoFoiTocado, items: bottomItems);
+    return BottomNavigationBar(onTap: botaoFoiTocado, items: const [
+      BottomNavigationBarItem(
+        label: "Cafés",
+        icon: Icon(Icons.coffee_outlined),
+      ),
+      BottomNavigationBarItem(
+          label: "Cervejas", icon: Icon(Icons.local_drink_outlined)),
+      BottomNavigationBarItem(label: "Nações", icon: Icon(Icons.flag_outlined))
+    ]);
   }
 }
 
 class DataBodyWidget extends StatelessWidget {
-  List<String> objects;
+  List objects;
 
   DataBodyWidget({super.key, this.objects = const []});
 
-  Expanded processarUmElemento(String obj) {
-    return Expanded(
-      child: Center(child: Text(obj)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    List<Expanded> allTheLines = objects
-        .map((obj) => Expanded(
-              child: Center(child: Text(obj)),
-            ))
-        .toList();
+    var columnNames = ["Nome", "Estilo", "IBU"],
+        propertyNames = ["name", "style", "ibu"];
 
-    return Column(children: allTheLines);
+    return DataTable(
+        columns: columnNames
+            .map((name) => DataColumn(
+                label: Expanded(
+                    child: Text(name,
+                        style: const TextStyle(fontStyle: FontStyle.italic)))))
+            .toList(),
+        rows: objects
+            .map((obj) => DataRow(
+                cells: propertyNames
+                    .map((propName) => DataCell(Text(obj[propName])))
+                    .toList()))
+            .toList());
   }
-}
-
-class MyAppBar extends AppBar {
-  MyAppBar({Key? key, Widget? title, Function(Color)? onColorChanged})
-      : super(key: key, title: title, actions: [
-          PopupMenuButton<Color>(
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<Color>>[
-              const PopupMenuItem<Color>(
-                value: Colors.red,
-                child: Text('Vermelho'),
-              ),
-              const PopupMenuItem<Color>(
-                value: Colors.blue,
-                child: Text('Azul'),
-              ),
-              const PopupMenuItem<Color>(
-                value: Colors.green,
-                child: Text('Verde'),
-              ),
-            ],
-            onSelected: onColorChanged,
-          ),
-        ]);
 }
