@@ -4,137 +4,247 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:http/http.dart' as http;
 
+enum TableStatus { idle, loading, ready, error }
+
 class DataService {
-  final ValueNotifier<List> tableStateNotifier = ValueNotifier([]);
-  final ValueNotifier<int> selectedOptionNotifier = ValueNotifier(5);
+  final ValueNotifier<Map<String, dynamic>> tableStateNotifier =
+      ValueNotifier({'status': TableStatus.idle, 'dataObjects': []});
 
   void carregar(index) {
-    Future<void> res;
+    final funcoes = [carregarCafes, carregarCervejas, carregarNacoes];
 
-    print('carregar #1 - antes de carregarDados');
+    tableStateNotifier.value = {
+      'status': TableStatus.loading,
+      'dataObjects': [],
+      'propertyNames': [],
+      'columnNames': [],
+    };
 
-    switch (index) {
-      case 0:
-        res = carregarCafes();
-        break;
-      case 1:
-        res = carregarNacoes();
-        break;
-      default:
-        break;
-    }
-    print('carregar #2 - carregarDados retornou $res');
+    funcoes[index]();
   }
 
-  Future<void> carregarCafes() async {
+  void carregarCafes() {
     var cafesUri = Uri(
-      scheme: 'https',
-      host: 'random-data-api.com',
-      path: 'api/coffee/random_coffee',
-      queryParameters: {'size': selectedOptionNotifier.value.toString()},
-    );
+        scheme: 'https',
+        host: 'random-data-api.com',
+        path: 'api/coffee/random_coffee',
+        queryParameters: {'size': '5'});
 
-    print('carregarCafes #1 - antes do await');
+    http.get(cafesUri).then((response) {
+      if (response.statusCode == 200) {
+        var cafesJson = jsonDecode(response.body);
 
-    var jsonString = await http.read(cafesUri);
-
-    print('carregarCafes #2 - depois do await');
-
-    var cafesJson = jsonDecode(jsonString);
-
-    tableStateNotifier.value = cafesJson;
+        tableStateNotifier.value = {
+          'status': TableStatus.ready,
+          'dataObjects': cafesJson,
+          'propertyNames': [
+            "blend_name",
+            "origin",
+            "variety",
+            "notes",
+            "intensifier"
+          ],
+          'columnNames': [
+            "Blend Name",
+            "Origin",
+            "Variety",
+            "Notes",
+            "Intensifier"
+          ],
+        };
+      } else {
+        tableStateNotifier.value = {
+          'status': TableStatus.error,
+          'dataObjects': [],
+          'propertyNames': [],
+          'columnNames': [],
+        };
+      }
+    });
   }
 
-  Future<void> carregarNacoes() async {
+  void carregarNacoes() async {
     var nacoesUri = Uri(
-      scheme: 'https',
-      host: 'random-data-api.com',
-      path: 'api/nation/random_nation',
-      queryParameters: {'size': selectedOptionNotifier.value.toString()},
-    );
+        scheme: 'https',
+        host: 'random-data-api.com',
+        path: 'api/nation/random_nation',
+        queryParameters: {'size': '5'});
 
-    print('carregarNacoes #1 - antes do await');
+    try {
+      var response = await http.get(nacoesUri);
+      if (response.statusCode == 200) {
+        var nacoesJson = jsonDecode(response.body);
 
-    var jsonString = await http.read(nacoesUri);
+        tableStateNotifier.value = {
+          'status': TableStatus.ready,
+          'dataObjects': nacoesJson,
+          'propertyNames': [
+            "nationality",
+            "language",
+            "capital",
+            "national_sport"
+          ],
+          'columnNames': [
+            "Nationality",
+            "Language",
+            "Capital",
+            "National Sport"
+          ],
+        };
+      } else {
+        tableStateNotifier.value = {
+          'status': TableStatus.error,
+          'dataObjects': [],
+          'propertyNames': [],
+          'columnNames': [],
+        };
+      }
+    } catch (e) {
+      tableStateNotifier.value = {
+        'status': TableStatus.error,
+        'dataObjects': [],
+        'propertyNames': [],
+        'columnNames': [],
+      };
+    }
+  }
 
-    print('carregarNacoes #2 - depois do await');
+  void carregarCervejas() {
+    var cervejasUri = Uri(
+        scheme: 'https',
+        host: 'random-data-api.com',
+        path: 'api/v2/beers',
+        queryParameters: {});
 
-    var nacoesJson = jsonDecode(jsonString);
+    http.get(cervejasUri).then((response) {
+      if (response.statusCode == 200) {
+        var cervejasJson = jsonDecode(response.body);
 
-    tableStateNotifier.value = nacoesJson;
+        tableStateNotifier.value = {
+          'status': TableStatus.ready,
+          'dataObjects': cervejasJson,
+          'propertyNames': [
+            "brand",
+            "name",
+            "style",
+            "hop",
+            "yeast",
+            "malts",
+            "ibu",
+            "alcohol",
+            "blg"
+          ],
+          'columnNames': [
+            "Brand",
+            "Name",
+            "Style",
+            "Hop",
+            "Yeast",
+            "Malts",
+            "IBU",
+            "Alcohol",
+            "BLG"
+          ],
+        };
+      } else {
+        tableStateNotifier.value = {
+          'status': TableStatus.error,
+          'dataObjects': [],
+          'propertyNames': [],
+          'columnNames': [],
+        };
+      }
+    });
   }
 }
-
-final dataService = DataService();
 
 void main() {
-  runApp(const MyApp());
+  runApp(AppDicas());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AppDicas extends StatelessWidget {
+  final dataService = DataService();
+
+  AppDicas({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Dicas"),
-        ),
-        body: ValueListenableBuilder(
-          valueListenable: dataService.tableStateNotifier,
-          builder: (_, value, __) {
-            List<String> cafeColumnNames = [
-              "Nome",
-              "Origem",
-              "Variedade",
-              "Notas",
-              "Intensificador"
-            ];
-            List<String> nacoesColumnNames = [
-              "País",
-              "Capital",
-              "População",
-              "Área",
-              "Língua"
-            ];
-
-            List<String> columnNames =
-                dataService.selectedOptionNotifier.value == 0
-                    ? cafeColumnNames
-                    : nacoesColumnNames;
-
-            return DataTableWidget(
-              jsonObjects: value,
-              propertyNames: const [
-                "blend_name",
-                "origin",
-                "variety",
-                "notes",
-                "intensifier"
-              ],
-              columnNames: columnNames,
-              cafeColumnNames: cafeColumnNames,
-              nacoesColumnNames: nacoesColumnNames,
-            );
-          },
-        ),
-        bottomNavigationBar:
-            NewNavBar(itemSelectedCallback: dataService.carregar),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return const NumberPickerDialog();
-              },
-            );
-          },
-          child: const Icon(Icons.settings),
-        ),
+      title: 'App Dicas',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: HomeScreen(dataService: dataService),
+    );
+  }
+}
+
+class HomeScreen extends HookWidget {
+  final DataService dataService;
+
+  const HomeScreen({super.key, required this.dataService});
+
+  @override
+  Widget build(BuildContext context) {
+    useEffect(() {
+      dataService.carregar(0);
+      return null;
+    }, []);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("App Dicas"),
+      ),
+      body: ValueListenableBuilder<Map<String, dynamic>>(
+        valueListenable: dataService.tableStateNotifier,
+        builder: (context, value, child) {
+          switch (value['status']) {
+            case TableStatus.idle:
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Bem-vindo(a) ao App Dicas!",
+                      style: TextStyle(fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      "Toque em um dos botões abaixo para carregar os dados:",
+                      style: TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+
+            case TableStatus.loading:
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+
+            case TableStatus.ready:
+              return DataTableWidget(
+                jsonObjects: value['dataObjects'],
+                propertyNames: value['propertyNames'],
+                columnNames: value['columnNames'],
+              );
+
+            case TableStatus.error:
+              return const Center(
+                child: Text(
+                  "Ocorreu um erro ao carregar os dados.",
+                  style: TextStyle(fontSize: 16),
+                ),
+              );
+          }
+
+          return const Text("...");
+        },
+      ),
+      bottomNavigationBar:
+          NewNavBar(itemSelectedCallback: dataService.carregar),
     );
   }
 }
@@ -142,74 +252,31 @@ class MyApp extends StatelessWidget {
 class NewNavBar extends HookWidget {
   final _itemSelectedCallback;
 
-  const NewNavBar({super.key, itemSelectedCallback})
-      : _itemSelectedCallback = itemSelectedCallback;
+  NewNavBar({super.key, itemSelectedCallback})
+      : _itemSelectedCallback = itemSelectedCallback ?? (int);
 
   @override
   Widget build(BuildContext context) {
+    var state = useState(1);
+
     return BottomNavigationBar(
-      items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.coffee),
-          label: 'Cafés',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.public),
-          label: 'Nações',
-        ),
-      ],
-      onTap: (int index) {
+      onTap: (index) {
+        state.value = index;
         _itemSelectedCallback(index);
       },
-    );
-  }
-}
-
-class NumberPickerDialog extends HookWidget {
-  const NumberPickerDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final selectedOption = useState(5);
-
-    return AlertDialog(
-      title: const Text('Selecionar Quantidade'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RadioListTile<int>(
-            title: const Text('5'),
-            value: 5,
-            groupValue: selectedOption.value,
-            onChanged: (value) {
-              selectedOption.value = value!;
-            },
-          ),
-          RadioListTile<int>(
-            title: const Text('10'),
-            value: 10,
-            groupValue: selectedOption.value,
-            onChanged: (value) {
-              selectedOption.value = value!;
-            },
-          ),
-          RadioListTile<int>(
-            title: const Text('15'),
-            value: 15,
-            groupValue: selectedOption.value,
-            onChanged: (value) {
-              selectedOption.value = value!;
-            },
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            dataService.selectedOptionNotifier.value = selectedOption.value;
-            Navigator.of(context).pop();
-          },
-          child: const Text('OK'),
+      currentIndex: state.value,
+      items: const [
+        BottomNavigationBarItem(
+          label: "Cafés",
+          icon: Icon(Icons.coffee_outlined),
+        ),
+        BottomNavigationBarItem(
+          label: "Cervejas",
+          icon: Icon(Icons.local_drink_outlined),
+        ),
+        BottomNavigationBarItem(
+          label: "Nações",
+          icon: Icon(Icons.flag_outlined),
         ),
       ],
     );
@@ -218,46 +285,35 @@ class NumberPickerDialog extends HookWidget {
 
 class DataTableWidget extends StatelessWidget {
   final List jsonObjects;
-  final List<String> propertyNames;
   final List<String> columnNames;
-  final List<String> cafeColumnNames;
-  final List<String> nacoesColumnNames;
+  final List<String> propertyNames;
 
-  const DataTableWidget({
-    super.key,
-    required this.jsonObjects,
-    required this.propertyNames,
-    required this.columnNames,
-    required this.cafeColumnNames,
-    required this.nacoesColumnNames,
-  });
+  const DataTableWidget(
+      {super.key,
+      required this.jsonObjects,
+      required this.columnNames,
+      required this.propertyNames});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: List<DataColumn>.generate(
-          columnNames.length,
-          (index) => DataColumn(label: Text(columnNames[index])),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: columnNames.map<DataColumn>((columnName) {
+              return DataColumn(label: Text(columnName));
+            }).toList(),
+            rows: jsonObjects.map<DataRow>((jsonObject) {
+              return DataRow(
+                  cells: propertyNames.map<DataCell>((propertyName) {
+                return DataCell(Text(jsonObject[propertyName].toString()));
+              }).toList());
+            }).toList(),
+          ),
         ),
-        rows: List<DataRow>.generate(
-          jsonObjects.length,
-          (index) {
-            var jsonObject = jsonObjects[index];
-            return DataRow(
-              cells: List<DataCell>.generate(
-                propertyNames.length,
-                (cellIndex) {
-                  var propertyName = propertyNames[cellIndex];
-                  var cellValue = jsonObject[propertyName].toString();
-                  return DataCell(Text(cellValue));
-                },
-              ),
-            );
-          },
-        ),
-      ),
+      ],
     );
   }
 }
