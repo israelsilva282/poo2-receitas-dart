@@ -23,7 +23,6 @@ class DataService {
       default:
         break;
     }
-
     print('carregar #2 - carregarDados retornou $res');
   }
 
