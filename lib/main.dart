@@ -1,74 +1,68 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:http/http.dart' as http;
 
-class DataService with ChangeNotifier {
+class DataService {
   final ValueNotifier<List> tableStateNotifier = ValueNotifier([]);
+  final ValueNotifier<int> selectedOptionNotifier = ValueNotifier(5);
 
-  List<String> getColumNames() {
-    final value = tableStateNotifier.value;
-    if (value.isEmpty) {
-      return [];
-    } else if (value[0].containsKey('origem')) {
-      return ['Nome', 'Origem', 'Intensidade'];
-    } else if (value[0].containsKey('style')) {
-      return ['Nome', 'Estilo', 'IBU'];
-    } else if (value[0].containsKey('continente')) {
-      return ['Nome', 'Continente', 'População'];
-    } else {
-      return [];
+  void carregar(index) {
+    var res;
+
+    print('carregar #1 - antes de carregarDados');
+
+    switch (index) {
+      case 0:
+        res = carregarCafes();
+        break;
+      case 1:
+        res = carregarNacoes();
+        break;
+      default:
+        break;
     }
+
+    print('carregar #2 - carregarDados retornou $res');
   }
 
-  List<String> getPropertyNames() {
-    final value = tableStateNotifier.value;
-    if (value.isEmpty) {
-      return [];
-    } else if (value[0].containsKey('origem')) {
-      return ['name', 'origem', 'intensidade'];
-    } else if (value[0].containsKey('style')) {
-      return ['name', 'style', 'ibu'];
-    } else if (value[0].containsKey('continente')) {
-      return ['name', 'continente', 'populacao'];
-    } else {
-      return [];
-    }
+  Future<void> carregarCafes() async {
+    var cafesUri = Uri(
+      scheme: 'https',
+      host: 'random-data-api.com',
+      path: 'api/coffee/random_coffee',
+      queryParameters: {'size': selectedOptionNotifier.value.toString()},
+    );
+
+    print('carregarCafes #1 - antes do await');
+
+    var jsonString = await http.read(cafesUri);
+
+    print('carregarCafes #2 - depois do await');
+
+    var cafesJson = jsonDecode(jsonString);
+
+    tableStateNotifier.value = cafesJson;
   }
 
-  void carregar(int index) {
-    if (index == 0) {
-      carregarCafes();
-    } else if (index == 1) {
-      carregarCervejas();
-    } else if (index == 2) {
-      carregarNacoes();
-    }
-  }
+  Future<void> carregarNacoes() async {
+    var nacoesUri = Uri(
+      scheme: 'https',
+      host: 'random-data-api.com',
+      path: 'api/nation/random_nation',
+      queryParameters: {'size': selectedOptionNotifier.value.toString()},
+    );
 
-  void carregarCafes() {
-    tableStateNotifier.value = [
-      {"name": "Café 1", "origem": "Brasil", "intensidade": "Forte"},
-      {"name": "Café 2", "origem": "Colômbia", "intensidade": "Média"},
-      {"name": "Café 3", "origem": "Etiópia", "intensidade": "Suave"}
-    ];
-    notifyListeners();
-  }
+    print('carregarNacoes #1 - antes do await');
 
-  void carregarCervejas() {
-    tableStateNotifier.value = [
-      {"name": "Cerveja 1", "style": "IPA", "ibu": "60"},
-      {"name": "Cerveja 2", "style": "Stout", "ibu": "40"},
-      {"name": "Cerveja 3", "style": "Pilsner", "ibu": "25"}
-    ];
-    notifyListeners();
-  }
+    var jsonString = await http.read(nacoesUri);
 
-  void carregarNacoes() {
-    tableStateNotifier.value = [
-      {"name": "País 1", "continente": "América", "populacao": "100 milhões"},
-      {"name": "País 2", "continente": "Europa", "populacao": "50 milhões"},
-      {"name": "País 3", "continente": "Ásia", "populacao": "200 milhões"}
-    ];
-    notifyListeners();
+    print('carregarNacoes #2 - depois do await');
+
+    var nacoesJson = jsonDecode(jsonString);
+
+    tableStateNotifier.value = nacoesJson;
   }
 }
 
@@ -93,47 +87,130 @@ class MyApp extends StatelessWidget {
         body: ValueListenableBuilder(
           valueListenable: dataService.tableStateNotifier,
           builder: (_, value, __) {
+            List<String> cafeColumnNames = [
+              "Nome",
+              "Origem",
+              "Variedade",
+              "Notas",
+              "Intensificador"
+            ];
+            List<String> nacoesColumnNames = [
+              "País",
+              "Capital",
+              "População",
+              "Área",
+              "Língua"
+            ];
+
+            List<String> columnNames =
+                dataService.selectedOptionNotifier.value == 0
+                    ? cafeColumnNames
+                    : nacoesColumnNames;
+
             return DataTableWidget(
               jsonObjects: value,
-              columnNames: dataService.getColumNames(),
-              propertyNames: dataService.getPropertyNames(),
+              propertyNames: const [
+                "blend_name",
+                "origin",
+                "variety",
+                "notes",
+                "intensifier"
+              ],
+              columnNames: columnNames,
+              cafeColumnNames: cafeColumnNames,
+              nacoesColumnNames: nacoesColumnNames,
             );
           },
         ),
         bottomNavigationBar:
             NewNavBar(itemSelectedCallback: dataService.carregar),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return NumberPickerDialog();
+              },
+            );
+          },
+          child: const Icon(Icons.settings),
+        ),
       ),
     );
   }
 }
 
 class NewNavBar extends HookWidget {
-  final Function(int) itemSelectedCallback;
+  final _itemSelectedCallback;
 
-  const NewNavBar({super.key, required this.itemSelectedCallback});
+  const NewNavBar({super.key, itemSelectedCallback})
+      : _itemSelectedCallback = itemSelectedCallback;
 
   @override
   Widget build(BuildContext context) {
-    var state = useState(0);
-
     return BottomNavigationBar(
-      onTap: (index) {
-        state.value = index;
-        itemSelectedCallback(index);
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.coffee),
+          label: 'Cafés',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.public),
+          label: 'Nações',
+        ),
+      ],
+      onTap: (int index) {
+        _itemSelectedCallback(index);
       },
-      currentIndex: state.value,
-      items: const [
-        BottomNavigationBarItem(
-          label: "Cafés",
-          icon: Icon(Icons.coffee_outlined),
-        ),
-        BottomNavigationBarItem(
-          label: "Cervejas",
-          icon: Icon(Icons.local_drink_outlined),
-        ),
-        BottomNavigationBarItem(
-          label: "Nações",
-          icon: Icon(Icons.flag_outlined),
+    );
+  }
+}
+
+class NumberPickerDialog extends HookWidget {
+  const NumberPickerDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedOption = useState(5);
+
+    return AlertDialog(
+      title: const Text('Selecionar Quantidade'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RadioListTile<int>(
+            title: const Text('5'),
+            value: 5,
+            groupValue: selectedOption.value,
+            onChanged: (value) {
+              selectedOption.value = value!;
+            },
+          ),
+          RadioListTile<int>(
+            title: const Text('10'),
+            value: 10,
+            groupValue: selectedOption.value,
+            onChanged: (value) {
+              selectedOption.value = value!;
+            },
+          ),
+          RadioListTile<int>(
+            title: const Text('15'),
+            value: 15,
+            groupValue: selectedOption.value,
+            onChanged: (value) {
+              selectedOption.value = value!;
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            dataService.selectedOptionNotifier.value = selectedOption.value;
+            Navigator.of(context).pop();
+          },
+          child: const Text('OK'),
         ),
       ],
     );
@@ -142,54 +219,46 @@ class NewNavBar extends HookWidget {
 
 class DataTableWidget extends StatelessWidget {
   final List jsonObjects;
-  final List<String> columnNames;
   final List<String> propertyNames;
+  final List<String> columnNames;
+  final List<String> cafeColumnNames;
+  final List<String> nacoesColumnNames;
 
   const DataTableWidget({
     super.key,
-    this.jsonObjects = const [],
-    this.columnNames = const ["Nome", "Estilo", "IBU"],
-    this.propertyNames = const ["name", "style", "ibu"],
+    required this.jsonObjects,
+    required this.propertyNames,
+    required this.columnNames,
+    required this.cafeColumnNames,
+    required this.nacoesColumnNames,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (columnNames.isEmpty) {
-      // Exibe uma mensagem ou widget alternativo quando não há colunas
-      return const Center(
-        child: Text(
-          'Nenhum dado disponível.',
-          style: TextStyle(fontSize: 16),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: List<DataColumn>.generate(
+          columnNames.length,
+          (index) => DataColumn(label: Text(columnNames[index])),
         ),
-      );
-    }
-
-    return DataTable(
-      columns: columnNames
-          .map(
-            (name) => DataColumn(
-              label: Expanded(
-                child: Text(
-                  name,
-                  style: const TextStyle(fontStyle: FontStyle.italic),
-                ),
+        rows: List<DataRow>.generate(
+          jsonObjects.length,
+          (index) {
+            var jsonObject = jsonObjects[index];
+            return DataRow(
+              cells: List<DataCell>.generate(
+                propertyNames.length,
+                (cellIndex) {
+                  var propertyName = propertyNames[cellIndex];
+                  var cellValue = jsonObject[propertyName].toString();
+                  return DataCell(Text(cellValue));
+                },
               ),
-            ),
-          )
-          .toList(),
-      rows: jsonObjects
-          .map(
-            (obj) => DataRow(
-              cells: propertyNames
-                  .map(
-                    (propName) => DataCell(
-                      Text(obj[propName]),
-                    ),
-                  )
-                  .toList(),
-            ),
-          )
-          .toList(),
+            );
+          },
+        ),
+      ),
     );
   }
 }
