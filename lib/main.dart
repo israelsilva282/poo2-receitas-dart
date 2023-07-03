@@ -9,7 +9,7 @@ class DataService {
   final ValueNotifier<int> selectedOptionNotifier = ValueNotifier(5);
 
   void carregar(index) {
-    var res;
+    Future<void> res;
 
     print('carregar #1 - antes de carregarDados');
 
@@ -23,7 +23,6 @@ class DataService {
       default:
         break;
     }
-
     print('carregar #2 - carregarDados retornou $res');
   }
 
@@ -69,7 +68,7 @@ class DataService {
 final dataService = DataService();
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -129,7 +128,7 @@ class MyApp extends StatelessWidget {
             showDialog(
               context: context,
               builder: (BuildContext context) {
-                return NumberPickerDialog();
+                return const NumberPickerDialog();
               },
             );
           },
